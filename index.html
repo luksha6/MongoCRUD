@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+    <title>HOTEL Crud WEB App</title>
+  </head>
+  <body>
+    <div class="container mt-2">
+        <div class="row">
+            <div class="col-lg-2"></div>
+            <div class="col-lg-8">
+                <form id="form" name="feki">
+                    <div class="form-group">
+                        <span>Dodaj Hotel</span>
+                        <input type="text" class="form-control mt-2" id="hotel_ime" name="hotel_ime" placeholder="Ime hotela">
+                        <input type="number" class="form-control mt-2" id="hotel_sobe" name="hotel_sobe" placeholder="Broj Soba">
+                        <input type="number" class="form-control mt-2" id="hotel_zvjezdice" name="hotel_zvjezdice" placeholder="Broj Zvjezdica">
+                        <input type="number" class="form-control mt-2" id="hotel_kapacitet" name="hotel_kapacitet" placeholder="Kapacitet">
+                        <input type="text" class="form-control mt-2" id="hotel_select" name="hotel_select" placeholder="Lokacija">
+
+                        <button type="submit" class="btn btn-success mt-2" id="button_submit_hotel">Dodaj</button>
+                    </div>
+
+                </form>
+            </div>
+            <div class="col-lg-2"></div>
+        </div>
+        <div class="row">
+            <div class="col-lg-2"></div>
+            <div class="col-lg-8">
+                <ul class="list-group" id="display">
+
+                </ul>
+            </div>
+            <div class="col-lg-2"></div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col-lg-2"></div>
+            <div class="col-lg-8">
+                <div class="alert" role="alert" id="message">
+
+                </div>
+            </div>
+            <div class="col-lg-2"></div>
+        </div>
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(()=> {
+            const display = $("#display");
+            const form = $("#form");
+            const hotel_ime = $("#hotel_ime");
+            const hotel_sobe = $("#hotel_sobe");
+            const hotel_zvjezdice = $("#hotel_zvjezdice");
+            const hotel_kapacitet = $("#hotel_kapacitet");
+            const hotel_lokacija = $("#hotel_select");
+            const message = $("#message");
+
+            message.hide();
+
+            const displayMessage = (flag, msg) => {
+                // successful
+                console.log(flag);
+                console.log(msg);
+                if (flag) {
+                    message.removeClass('alert-danger');
+                    message.addClass('alert-success');
+                    message.html(msg);
+                    message.show();
+                }
+                else {
+                    message.removeClass('alert-success');
+                    message.addClass('alert-danger');
+                    message.html(msg);
+                    message.show();
+                }
+
+
+            }
+
+
+            const gethotels = ()=>{
+                fetch('/gethotels',{method : "get"}).then((response)=>{
+                    return response.json();
+                }).then((data)=>{
+                    console.log(data);
+                    displayhotels(data);
+                });
+            }
+
+            gethotels();
+
+            const resethotelsInput = ()=>{
+                hotel_ime.val('');
+                hotel_sobe.val('');
+                hotel_zvjezdice.val('');
+                hotel_kapacitet.val('');
+                hotel_lokacija.val('');
+            }
+
+            const edithotel = (hotel,hotelID,editID)=>{
+                let editBtn = $(`#${editID}`);
+                editBtn.click(()=>{
+                   /* let submitButton = document.getElementById('button_submit_hotel');
+                    submitButton.disabled = true; */
+                    fetch(`/${hotel._id}`,{
+                        method : "put",
+                        headers : {
+                            "Content-Type" : "application/json; charset=utf-8",
+                            'Accept': 'application/json'
+
+                        },
+                        body : JSON.stringify({
+                            hotel_ime: hotel_ime.val(),
+                            hotel_sobe: hotel_sobe.val().toString(),
+                            hotel_zvjezdice:hotel_zvjezdice.val().toString(),
+                            hotel_kapacitet: hotel_kapacitet.val().toString(),
+                            hotel_lokacija: hotel_lokacija.val()
+                        })
+                    }).then((response)=>{
+                        return response.json();
+                    }).then((data)=>{
+                        if(data.ok == 1){
+                            let hotelIndex = $(`#${hotelID}`);
+                            hotelIndex.html( () => {
+                               return   "Ime Hotela: <b>"+ data.value.hotel_ime + "</b><br> Broj Soba: <b>" + data.value.hotel_sobe + "</b> <br>" +
+                                        "Broj Zvjezdica: <b> " +  data.value.hotel_zvjezdice + "</b> <br>" +
+                                        "Kapacitet: <b>" + data.value.hotel_kapacitet +"</b> <br>" +
+                                        "Lokacija: <b>" + data.value.hotel_lokacija +"</b>  <br>";
+
+                            });
+                            resethotelsInput();
+                        }
+                    });
+
+                });
+            }
+
+            const deletehotel = (hotel,listItemID,deleteID)=>{
+                let deleteBtn = $(`#${deleteID}`);
+                deleteBtn.click(()=>{
+                    fetch(`/${hotel._id}`,{
+                        method: "delete"
+                    }).then((response)=>{
+                        return response.json();
+                    }).then((data)=>{
+                        if(data.ok == 1){
+                            $(`#${listItemID}`).remove();
+                            displayMessage(false, 'Uspjesno obrisano!');
+                        }
+                    });
+                });
+            }
+
+
+            const buildIDS = (hotel)=>{
+                return {
+                    editID : "edit_" + hotel._id,
+                    deleteID : "delete_" + hotel._id,
+                    listItemID : "listItem_" + hotel._id,
+                    hotelID : "hotel_" + hotel._id
+                }
+            }
+
+            const buildTemplate = (hotel,ids)=>{
+                return `<li class="list-group-item" id="${ids.listItemID}">
+                            <div class="row">
+                                <div class="col-md-8" id="${ids.hotelID}">
+                                Ime Hotela: <b>${hotel.hotel_ime} </b><br>
+                                Broj Soba: <b>${hotel.hotel_sobe}</b> <br>
+                                Broj Zvjezdica: <b>${hotel.hotel_zvjezdice}</b> <br>
+                                Kapacitet: <b>${hotel.hotel_kapacitet}</b> <br>
+                                Lokacija: <b>${hotel.hotel_lokacija}</b>  <br>
+                                </div>
+                                <div class="col-md-4 text-right">
+                                    <button type="button" class="btn btn-secondary" id="${ids.editID}">Edit</button>
+                                    <button type="button" class="btn btn-danger" id="${ids.deleteID}">Delete</button>
+                                </div>
+                            </div>
+                       </li>`;
+            }
+
+            const displayhotels = (data)=>{
+                data.forEach((hotel)=>{
+                    let ids = buildIDS(hotel);
+                    display.append(buildTemplate(hotel,ids));
+                    edithotel(hotel,ids.hotelID,ids.editID);
+                    deletehotel(hotel,ids.listItemID,ids.deleteID);
+                });
+            }
+
+            form.submit((e)=>{
+                e.preventDefault();
+                fetch('/',{
+                    method : 'post',
+                    body : JSON.stringify(
+                        {
+                            hotel_ime: hotel_ime.val(),
+                            hotel_sobe: hotel_sobe.val().toString(),
+                            hotel_zvjezdice:hotel_zvjezdice.val().toString(),
+                            hotel_kapacitet: hotel_kapacitet.val().toString(),
+                            hotel_lokacija: hotel_lokacija.val()
+                        }
+
+                    ),
+                    headers : {
+                        "Content-Type" : "application/json; charset=utf-8"
+                    }
+                }).then((response)=>{
+                    console.log(response);
+                    return response.json();
+                }).then((data)=>{
+                    console.log(data);
+                    if(!data.error){
+                        if(data.result.ok == 1 && data.result.n == 1){
+                            let ids = buildIDS(data.document);
+                            display.append(buildTemplate(data.document,ids));
+                            edithotel(data.document,ids.hotelID,ids.editID);
+                            deletehotel(data.document,ids.listItemID,ids.deleteID);
+                            displayMessage(true,data.msg);
+                        }
+                    }
+                    else
+                        displayMessage(false,data.error.message);
+
+                    resethotelsInput();
+                    
+                });
+            });
+
+        });
+    </script>
+</body>
+</html>
